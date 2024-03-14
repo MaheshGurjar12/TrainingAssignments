@@ -14,8 +14,7 @@ returns : Returns the records fetched by the query
         return Database.getQueryLocator([SELECT Mark_For_Delete__c, 
                                          CreatedById, Is_Registration_Completed__c
                                          FROM Student__c WHERE Is_Registration_Completed__c = false 
-                                         AND CreatedDate = Last_N_Days:2 
-                                         AND CreatedDate != LAST_N_DAYS:1]);
+                                        ]);
     }
     
     /**
@@ -28,7 +27,6 @@ return : void
             
             student.Mark_For_Delete__c = 'Yes';
             this.studentList.add(student);
-            this.countMarkedStudents++;
         }
         update studentsToUpdate;
         
@@ -49,7 +47,7 @@ params : None
 return : void
 **/
     private void sendEmail() {
-
+        
         List<Messaging.SingleEmailMessage> mails = new List<Messaging.SingleEmailMessage>();
         
         List<String> allEmails = new List<String>();
@@ -58,23 +56,38 @@ return : void
         for (Student__c student : studentList) {
             createdByIds.add(student.CreatedById);
         }
-        
+        Map<Id, Integer> countStudents = new Map<Id, Integer>();
+        for(Student__c student : [SELECT CreatedById FROM Student__c WHERE Id IN :studentList]){
+            if(countStudents.containsKey(student.CreatedById))
+            {
+                this.countMarkedStudents++;
+                countStudents.put(student.CreatedById, this.countMarkedStudents);
+            }
+            else{
+                this.countMarkedStudents = 0;
+                this.countMarkedStudents++;
+                countStudents.put(student.CreatedById, this.countMarkedStudents);
+            }
+        }        
         Map<Id, User> usersMap = new Map<Id, User>([SELECT Id, Email FROM User WHERE Id IN :createdByIds]);
-        
-        for(Student__c student : studentList){
-            if(usersMap.containsKey(student.CreatedById)){
-                allEmails.add(usersMap.get(student.CreatedById).Email);
+ 
+        for (Id creatorId : countStudents.keySet()) {
+            Integer count = countStudents.get(creatorId);
+            if (count>0) { 
+                User creator = usersMap.get(creatorId);  
+                if (creator != null && creator.Email != null) {
+                    Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+                    mail.setToAddresses(new List<String>{creator.Email});
+                    mail.setSubject('Batch Job Completed');
+                    mail.setPlainTextBody('Hey, the batch Job Completed. Number of students marked for deletion: '+count);
+                    mails.add(mail);
+                }
             }
         }
-        
-        if (!allEmails.isEmpty() && countMarkedStudents>0) {
-            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            mail.setToAddresses(allEmails);
-            mail.setSubject('Batch Job Completed');
-            mail.setPlainTextBody('Hey, the batch Job Completed. Number of students marked for deletion: '+countMarkedStudents);
-            mails.add(mail);
+        if (!mails.isEmpty()) {
             Messaging.sendEmail(mails);
-        } else {
+        }
+        else {
             System.debug('No email addresses found to send the email to.');
         }
     }
@@ -88,5 +101,4 @@ return : void
         ScheduleBatchOnStudents scheduleBatch = new ScheduleBatchOnStudents();
         Database.executeBatch(scheduleBatch);
     }
-    
 }
