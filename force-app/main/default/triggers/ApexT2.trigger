@@ -5,4 +5,5 @@ trigger ApexT2 on Account (before update)
     System.debug('o '+o);
     System.debug('n '+n);
     System.debug('First Message');
+    System.debug('Second Message');
 }
