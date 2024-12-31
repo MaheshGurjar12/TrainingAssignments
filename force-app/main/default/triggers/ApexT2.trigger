@@ -4,6 +4,8 @@ trigger ApexT2 on Account (before update)
     Account n=Trigger.new[0];
     System.debug('o '+o);
     System.debug('n '+n);
+    System.debug('Revert 1');
+    System.debug('Revert 2');
     System.debug('First Message');
     System.debug('First Commit');
     System.debug('Changes to attach ILIs');
