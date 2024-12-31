@@ -6,6 +6,5 @@ trigger ApexT2 on Account (before update)
     System.debug('n '+n);
     System.debug('First Message');
     System.debug('First Commit');
-    System.debug('Changes to Create Button Only');
     System.debug('Changes to attach ILIs');
 }
