@@ -5,4 +5,6 @@ trigger ApexT2 on Account (before update)
     System.debug('o '+o);
     System.debug('n '+n);
     System.debug('Revert 1');
+    System.debug('Revert 2');
+
 }
