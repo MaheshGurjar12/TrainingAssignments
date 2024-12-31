@@ -4,4 +4,5 @@ trigger ApexT2 on Account (before update)
     Account n=Trigger.new[0];
     System.debug('o '+o);
     System.debug('n '+n);
+    System.debug('First Commit');
 }
